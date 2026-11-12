@@ -30,7 +30,7 @@ pkg install util-linux coreutils
 
 1. Clone the repository or download the script:
    ```bash
-   git clone https://github.com/your-username/yacal.git
+   git clone https://github.com/haithamaouati/yacal.git
    cd yacal
    ```
 
