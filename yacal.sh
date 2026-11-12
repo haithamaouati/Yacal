@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Author: Haitham Aouati
+# GitHub: https://github.com/haithamaouati
 # yacal - Yet Another Calendar: Advanced CLI Calendar for Termux
 
 # --- Dependency Check ---
@@ -65,54 +67,60 @@ render_month() {
     local cur_month=$((10#$(date +%m)))
     local cur_year=$(date +%Y)
 
-    echo "     $month_name $y"
-    local table_data="Su\tMo\tTu\tWe\tTh\tFr\tSa"
-    local line=()
+    # Dynamically center header over 20-character wide grid
+    local header_text="$month_name $y"
+    local header_len=${#header_text}
+    local pad_len=$(( (20 - header_len) / 2 ))
+    printf "%*s%s\n" "$pad_len" "" "$header_text"
+    echo "Su Mo Tu We Th Fr Sa"
 
+    local week_line=()
     for ((i=0; i<first_day_dw; i++)); do
-        line+=("")
+        week_line+=("  ")
     done
 
     for ((d=1; d<=days_in_month; d++)); do
-        line+=("$d")
-        if [[ ${#line[@]} -eq 7 ]]; then
-            table_data+="\n"$(IFS=$'\t'; echo "${line[*]}")
-            line=()
-        fi
-    done
+        local day_str
+        day_str=$(printf "%2d" "$d")
 
-    if [[ ${#line[@]} -gt 0 ]]; then
-        while [[ ${#line[@]} -lt 7 ]]; do
-            line+=("")
+        if [[ $m -eq $cur_month && $y -eq $cur_year && $d -eq $cur_day ]]; then
+            day_str="\x1b[7m${day_str}\x1b[0m"
+        fi
+
+        for sh in "${specific_highlights[@]}"; do
+            local sh_m="${sh%%:*}"
+            local rest="${sh#*:}"
+            local sh_d="${rest%%:*}"
+            local sh_style="${rest##*:}"
+            [[ -z "$sh_m" || -z "$sh_d" ]] && continue
+            sh_m=$((10#$sh_m))
+            sh_d=$((10#$sh_d))
+
+            if [[ $sh_m -eq $m && $d -eq $sh_d ]]; then
+                day_str="${sh_style}$(printf "%2d" "$d")\x1b[0m"
+            fi
         done
-        table_data+="\n"$(IFS=$'\t'; echo "${line[*]}")
-    fi
 
-    local output
-    if ! output=$(echo -e "$table_data" | column -t -s $'\t' 2>/dev/null); then
-        echo "Error: Failed to format calendar grid using 'column'." >&2
-        return 1
-    fi
+        week_line+=("$day_str")
 
-    if [[ $m -eq $cur_month && $y -eq $cur_year ]]; then
-        output=$(echo "$output" | sed -E "s/\b${cur_day}\b/\x1b[7m${cur_day}\x1b[0m/g")
-    fi
-
-    for sh in "${specific_highlights[@]}"; do
-        local sh_m="${sh%%:*}"
-        local rest="${sh#*:}"
-        local sh_d="${rest%%:*}"
-        local sh_style="${rest##*:}"
-        [[ -z "$sh_m" || -z "$sh_d" ]] && continue
-        sh_m=$((10#$sh_m))
-        sh_d=$((10#$sh_d))
-
-        if [[ $sh_m -eq $m ]]; then
-            output=$(echo "$output" | sed -E "s/\b${sh_d}\b/${sh_style}${sh_d}\x1b[0m/g")
+        if [[ ${#week_line[@]} -eq 7 ]]; then
+            (
+                IFS=" "
+                echo -e "${week_line[*]}"
+            )
+            week_line=()
         fi
     done
 
-    echo -e "$output"
+    if [[ ${#week_line[@]} -gt 0 ]]; then
+        while [[ ${#week_line[@]} -lt 7 ]]; do
+            week_line+=("  ")
+        done
+        (
+            IFS=" "
+            echo -e "${week_line[*]}"
+        )
+    fi
     
     if [[ "$show_datetime" -eq 1 ]]; then
         echo ""
@@ -201,10 +209,8 @@ case "$MODE" in
         t_month=$(date -d "$TARGET_DATE" +%m)
         t_day=$(date -d "$TARGET_DATE" +%d)
         
-        # Render calendar first
         render_month "$SHOW_DATE" "$t_month" "$t_year" "$t_month:$t_day:\x1b[43m\x1b[30m"
 
-        # Print message under the calendar
         if [[ $diff_days -lt 0 ]]; then
             echo "Target date $TARGET_DATE was $(( -diff_days )) days ago."
         else
@@ -229,7 +235,6 @@ case "$MODE" in
         d1_year=$(date -d "$DATE1" +%Y); d1_month=$(date -d "$DATE1" +%m); d1_day=$(date -d "$DATE1" +%d)
         d2_year=$(date -d "$DATE2" +%Y); d2_month=$(date -d "$DATE2" +%m); d2_day=$(date -d "$DATE2" +%d)
 
-        # Render calendar(s) first
         if [[ "$d1_month" == "$d2_month" && "$d1_year" == "$d2_year" ]]; then
             render_month "$SHOW_DATE" "$d1_month" "$d1_year" "$d1_month:$d1_day:\x1b[42m\x1b[30m" "$d2_month:$d2_day:\x1b[41m\x1b[30m"
         else
@@ -237,7 +242,6 @@ case "$MODE" in
             render_month "$SHOW_DATE" "$d2_month" "$d2_year" "$d2_month:$d2_day:\x1b[41m\x1b[30m"
         fi
 
-        # Print message under the calendar(s)
         echo "Total days between $DATE1 and $DATE2: $diff_days days"
         exit 0
         ;;
