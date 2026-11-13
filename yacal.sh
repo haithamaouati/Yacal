@@ -22,6 +22,7 @@ usage() {
     echo "  -c                     Clear screen before showing calendar"
     echo "  -r YYYY-MM-DD          Count days remaining until target date and highlight it (Yellow)"
     echo "  -b DATE1 DATE2         Count days between two dates and highlight both (Green & Red)"
+    echo "  -m YYYY-MM-DD          Mark a specific day on the calendar (Purple)"
     echo "  -h                     Show this help message"
     echo ""
     echo "Examples:"
@@ -32,6 +33,7 @@ usage() {
     echo "  $0 -c -d               Clear screen and show calendar with date and time"
     echo "  $0 -r 2026-12-31       Count days remaining to target date and highlight it"
     echo "  $0 -b 2026-12-01 2026-12-25  Count days between two dates with green/red highlights"
+    echo "  $0 -m 2026-12-25       Mark a specific day on the calendar in purple"
     exit 0
 }
 
@@ -134,6 +136,7 @@ MODE="single"
 TARGET_DATE=""
 DATE1=""
 DATE2=""
+MARK_DATE=""
 SHOW_THREE=0
 SHOW_DATE=0
 CLEAR_SCREEN=0
@@ -164,6 +167,11 @@ while [[ $# -gt 0 ]]; do
             DATE2="$3"
             MODE="between"
             shift 3
+            ;;
+        -m)
+            MARK_DATE="$2"
+            MODE="mark"
+            shift 2
             ;;
         -h)
             usage
@@ -243,6 +251,27 @@ case "$MODE" in
         fi
 
         echo "Total days between $DATE1 and $DATE2: $diff_days days"
+        exit 0
+        ;;
+
+    "mark")
+        if [[ -z "$MARK_DATE" ]]; then
+            echo "Error: The -m flag requires a target date (e.g., -m 2026-12-25)." >&2
+            exit 1
+        fi
+        if ! date -d "$MARK_DATE" &>/dev/null; then
+            echo "Error: Invalid date format '$MARK_DATE'. Use YYYY-MM-DD." >&2
+            exit 1
+        fi
+
+        m_year=$(date -d "$MARK_DATE" +%Y)
+        m_month=$(date -d "$MARK_DATE" +%m)
+        m_day=$(date -d "$MARK_DATE" +%d)
+
+        # Render calendar with Purple highlight style (\x1b[45m\x1b[30m)
+        render_month "$SHOW_DATE" "$m_month" "$m_year" "$m_month:$m_day:\x1b[45m\x1b[30m"
+
+        echo "Marked date: $MARK_DATE"
         exit 0
         ;;
 
