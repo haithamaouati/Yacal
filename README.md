@@ -9,6 +9,7 @@
 - **Multi-Month View (`-3`)**: Displays previous, current, and next months sequentially.
 - **Countdown Calculator (`-r`)**: Calculates remaining days until a target date (`YYYY-MM-DD`) and highlights the target day in yellow.
 - **Date Interval Calculator (`-b`)**: Calculates total days between two dates (`YYYY-MM-DD`) and highlights the start date in green and the end date in red.
+- **Mark Day (`-m`)**: Highlights a specific date (`YYYY-MM-DD`) in purple.
 - **Live Timestamp (`-d`)**: Appends the formatted current date and time directly beneath the calendar output.
 - **Screen Control (`-c`)**: Clears the terminal screen before rendering.
 - **Dependency Checking**: Verifies system prerequisites on launch and outputs clear warning messages if missing.
@@ -63,6 +64,7 @@ Usage: yacal [OPTIONS] [MONTH] [YEAR]
 | `-c` | Clear terminal screen before rendering |
 | `-r YYYY-MM-DD` | Count remaining days until target date and highlight it (Yellow) |
 | `-b DATE1 DATE2` | Count total days between two dates and highlight both (Green & Red) |
+| `-m YYYY-MM-DDMark` | a specific day on the calendar in purple |
 | `-h` | Show usage instructions and examples |
 
 ---
@@ -105,6 +107,11 @@ Usage: yacal [OPTIONS] [MONTH] [YEAR]
 ./yacal -b 2026-12-01 2026-12-25
 ```
 *Outputs the calendar with December 1st highlighted in green, December 25th in red, and the total interval count.*
+
+#### Mark a Specific Day
+```bash
+./yacal.sh -m 2026-12-25
+```
 
 ---
 
